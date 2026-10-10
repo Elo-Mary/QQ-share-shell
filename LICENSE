@@ -32,3 +32,9 @@ Notes for this project (not part of the MIT terms):
   and to relay the shared content to TIM.
 * Publishing this app to application stores, or using it to attack, impersonate or
   deceive other people's devices, is not a permitted use.
+* Anyone installing or using the app must also accept the in-app "Disclaimer and Terms of
+  Use" (see `app/src/main/res/values/strings.xml`, and section 十 of README.md). It restricts
+  use to devices you own or are authorised to manage, forbids deception and redistribution,
+  and states that the software is provided as is, with all consequences borne by the user.
+* A disclaimer cannot exempt anyone from liability or replace authorisation; the practical way
+  to keep risk low is to use this only on your own device, and not to redistribute it.

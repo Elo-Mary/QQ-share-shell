@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -78,8 +79,24 @@ public class ShellActivity extends Activity {
         addHeading(box, getString(R.string.shell_section_usage));
         addBody(box, getString(R.string.shell_usage));
 
-        addHeading(box, getString(R.string.shell_section_notes));
-        addBody(box, getString(R.string.shell_notes));
+        // 免责声明：逐条渲染，条与条之间留一点空隙
+        addHeading(box, getString(R.string.shell_section_disclaimer));
+        int[] disclaimerIds = new int[]{
+                R.string.shell_disclaimer_unofficial,
+                R.string.shell_disclaimer_scope,
+                R.string.shell_disclaimer_privacy,
+                R.string.shell_disclaimer_limits,
+                R.string.shell_disclaimer_risk,
+                R.string.shell_disclaimer_rights,
+                R.string.shell_disclaimer_consent,
+                R.string.shell_disclaimer_uninstall
+        };
+        for (int i = 0; i < disclaimerIds.length; i++) {
+            addBody(box, getString(disclaimerIds[i]));
+            if (i < disclaimerIds.length - 1) {
+                addSpacer(box);
+            }
+        }
 
         setContentView(scroll);
         refresh();
@@ -105,6 +122,14 @@ public class ShellActivity extends Activity {
         view.setTextSize(13);
         view.setLineSpacing(0, 1.15f);
         box.addView(view);
+    }
+
+    /** 段落之间留白，纯代码实现，避免为此再引入 layout 资源 */
+    private void addSpacer(LinearLayout box) {
+        View spacer = new View(this);
+        spacer.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, pad / 3));
+        box.addView(spacer);
     }
 
     /** 运行状态：包名、版本、Android 版本、TIM、分享面板条目、本应用签名指纹 */

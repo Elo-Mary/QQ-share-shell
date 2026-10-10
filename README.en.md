@@ -151,7 +151,30 @@ signature mismatch.
 
 MIT — see [LICENSE](LICENSE).
 
-This is an unofficial, independent project for personal use. It is not affiliated with or
-endorsed by Tencent; "QQ" and "TIM" are trademarks of their respective owners and are used here
-only to describe interoperability. Do not ship it to app stores, and do not use it against
-other people's devices.
+The app shows a full **Disclaimer and Terms of Use** on its first screen (it lives in
+`res/values/strings.xml`). In short:
+
+* **Unofficial.** An independent personal project, not affiliated with, authorised by, endorsed by or
+  sponsored by Tencent. "QQ" and "TIM" are trademarks of their respective owners, used here only to
+  describe interoperability. No Tencent code, resources or data are included.
+* **What it does.** On your own device it reuses QQ's package name and a few identically named
+  components, and relays shared content to the app you pick. It does not modify other apps, does not
+  read other apps' data, and does not defeat any signature or integrity check.
+* **Privacy.** No network access, no data collected or uploaded. The only permission is package
+  visibility (`QUERY_ALL_PACKAGES`), used to enumerate share targets.
+* **Restrictions.** For personal use and study, on devices you own or are authorised to manage only.
+  Not for other people's devices, not for deception or impersonation, not for defeating security or
+  licensing checks, and not for redistribution, resale, app stores or commercial use.
+* **Risk.** Provided "as is", without warranty of any kind. It may conflict with the terms of service
+  of apps on your device and may break their features (for example QQ login or QQ Pay). You bear all
+  consequences; the author accepts no liability. Check your local law and those terms of service first.
+* **Rights holders.** If a rights holder objects to this project, please open an issue; distribution
+  and the related content will be removed promptly.
+* **Temporary by design.** If you disagree with any of the above, do not use it and uninstall it.
+  Treat it as a stopgap: once your problem is solved, uninstall it within 24 hours to restore your
+  device to its original state.
+
+> **Honest note:** a disclaimer cannot exempt anyone from liability or replace authorisation. It only
+> states the project's intent, its intended scope of use, and where responsibility lies. The real
+> risk reduction is: use it on your own device only, don't redistribute it, don't ship it to stores,
+> and don't use it against other people's devices.

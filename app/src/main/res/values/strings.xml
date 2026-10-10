@@ -16,7 +16,7 @@
 
     <string name="shell_section_status">运行状态</string>
     <string name="shell_section_usage">使用说明</string>
-    <string name="shell_section_notes">说明与免责声明</string>
+    <string name="shell_section_disclaimer">免责声明与使用限制</string>
 
     <string name="shell_checkbox">在分享面板里显示「QQ」这一项</string>
     <string name="shell_button_self_test">自测：把一段文字转发给 TIM</string>
@@ -25,5 +25,23 @@
 
     <string name="shell_usage">1. 确认 TIM 已安装，且下方的开关是开启状态。\n2. 在第三方应用里点「分享至 QQ」；若弹出「QQ / TIM」选择器，选 TIM 即可。\n3. 想确认转发链路是否正常，点上面的「自测」按钮。</string>
 
-    <string name="shell_notes">本应用与腾讯公司无关，不含任何腾讯代码、资源或数据。它只做三件事：\n· 使用与 QQ 相同的包名和若干同名组件名，让仍按包名判断「QQ 是否安装」的应用重新显示分享入口；\n· 收到分享内容后原样转发给 TIM；\n· 除此之外不做任何事——不联网、不收集数据、不申请通讯录或存储等敏感权限，也不读取其它应用的数据。\n\n注意：部分应用还会校验 QQ 的签名，这种情况本应用无法绕过，入口不会出现。\n在装回真正的 QQ 之前，请先卸载本应用：包名相同、签名不同，无法覆盖安装。</string>
+    <!--
+      免责声明：分条写成独立字符串，便于单独修改与后续多语言。
+      注意：字符串里不要出现未转义的 & < > 和半角引号，这里统一用全角引号“”。
+    -->
+    <string name="shell_disclaimer_unofficial">【非官方】本应用是独立的第三方个人项目，与腾讯公司及其关联公司没有任何关系，未获其授权、认可或赞助。“QQ”“TIM”等名称与商标归各自权利人所有，此处仅用于说明兼容对象与用途。本应用不含任何腾讯代码、资源或数据。</string>
+
+    <string name="shell_disclaimer_scope">【本应用做什么】仅在你自己的设备上做三件事：一是使用与 QQ 相同的包名和若干同名组件名，让仍按包名判断“QQ 是否安装”的应用重新显示分享入口；二是把收到的分享内容原样转交给你指定的应用（通常是 TIM）；三是在你关闭开关后停止上述行为。它不修改其它任何应用，不读取其它应用的数据，也不破解或绕过任何签名校验与保护措施——遇到会校验 QQ 签名的应用，它只会失效（入口不会出现）。</string>
+
+    <string name="shell_disclaimer_privacy">【隐私】不联网，不收集、不上传任何数据；除用于枚举分享目标的包可见性权限（QUERY_ALL_PACKAGES）外，不申请任何权限。</string>
+
+    <string name="shell_disclaimer_limits">【使用限制】仅限在你自己拥有或有权管理的设备上、为个人使用与学习研究而安装使用。不得用于：他人的或未经同意的设备；欺骗、冒充或误导任何人；绕过任何安全机制、风控或授权校验；以任何形式分发、转售、上架应用商店或用于商业用途。</string>
+
+    <string name="shell_disclaimer_risk">【风险与责任】本应用按“现状”提供，不附带任何明示或默示担保。使用它可能与你设备上某些应用的服务条款不一致，也可能导致这些应用功能异常（例如 QQ 登录、QQ 支付不可用）。是否使用本应用、以及使用所产生的一切后果（包括但不限于账号、数据、设备与法律后果），均由你自行承担，作者不承担任何责任。请在使用前自行确认你所在地的法律以及你所使用应用的服务条款。</string>
+
+    <string name="shell_disclaimer_rights">【权利人】若权利人认为本应用或其仓库内容不妥，请通过项目仓库的 Issue 联系，作者将在收到通知后立即停止分发并删除相关内容。</string>
+
+    <string name="shell_disclaimer_consent">【不同意即卸载】本声明自安装之日起生效；如你不同意其中任何一条，请不要使用本应用并立即卸载。本应用仅建议作为临时性方案使用：问题解决后请在 24 小时内自行卸载，以恢复设备原状。</string>
+
+    <string name="shell_disclaimer_uninstall">【卸载】在系统设置中卸载本应用即可完全恢复原状。在装回真正的 QQ 之前必须先卸载本应用——包名相同、签名不同，无法覆盖安装。</string>
 </resources>
