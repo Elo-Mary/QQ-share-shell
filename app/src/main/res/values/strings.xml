@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用名：显示在桌面图标下方、系统「应用信息」与最近任务里 -->
+    <string name="app_name">空壳QQ</string>
+
+    <!--
+      分享面板 / 分享选择器里显示的那一项名字，必须保持为 QQ。
+      第三方应用的「分享至 QQ」入口是靠包名 com.tencent.mobileqq 判断的；
+      这个名字只负责让分享面板里那一项显示成 QQ（而不是空壳QQ）。
+    -->
+    <string name="qq_entry_label">QQ</string>
+
+    <string name="shell_title">空壳QQ</string>
+
+    <string name="shell_subtitle">让仍按包名探测 QQ 的应用重新显示「分享至 QQ」入口；内容实际转交给 TIM。</string>
+
+    <string name="shell_section_status">运行状态</string>
+    <string name="shell_section_usage">使用说明</string>
+    <string name="shell_section_notes">说明与免责声明</string>
+
+    <string name="shell_checkbox">在分享面板里显示「QQ」这一项</string>
+    <string name="shell_button_self_test">自测：把一段文字转发给 TIM</string>
+    <string name="shell_button_open_tim">打开 TIM</string>
+    <string name="shell_button_open_tim_missing">未检测到 TIM</string>
+
+    <string name="shell_usage">1. 确认 TIM 已安装，且下方的开关是开启状态。\n2. 在第三方应用里点「分享至 QQ」；若弹出「QQ / TIM」选择器，选 TIM 即可。\n3. 想确认转发链路是否正常，点上面的「自测」按钮。</string>
+
+    <string name="shell_notes">本应用与腾讯公司无关，不含任何腾讯代码、资源或数据。它只做三件事：\n· 使用与 QQ 相同的包名和若干同名组件名，让仍按包名判断「QQ 是否安装」的应用重新显示分享入口；\n· 收到分享内容后原样转发给 TIM；\n· 除此之外不做任何事——不联网、不收集数据、不申请通讯录或存储等敏感权限，也不读取其它应用的数据。\n\n注意：部分应用还会校验 QQ 的签名，这种情况本应用无法绕过，入口不会出现。\n在装回真正的 QQ 之前，请先卸载本应用：包名相同、签名不同，无法覆盖安装。</string>
+</resources>

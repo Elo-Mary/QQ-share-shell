@@ -1,0 +1,5 @@
+// 如果 Android Studio 提示 AGP 版本不兼容，把下面的 8.2.2 换成你 Studio 支持的版本
+// （AGP 7.3 及以上都支持本工程使用的 namespace 写法）
+plugins {
+    id 'com.android.application' version '8.2.2' apply false
+}

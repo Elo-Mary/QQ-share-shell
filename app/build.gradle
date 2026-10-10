@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.tencent.mobileqq'
+    compileSdk 34
+
+    defaultConfig {
+        // 关键点：applicationId 必须与真 QQ 一致，否则第三方 App 探测不到
+        applicationId 'com.tencent.mobileqq'
+        minSdk 21
+        targetSdk 34
+        // versionName 需要大于 QQ SDK 内部的最低版本门槛（4.1 之类），
+        // 太小会被 SDK 判定为“版本过低 = 未安装”
+        versionCode 89090
+        versionName '8.9.90'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // 用 debug 签名即可：反正是自己侧载，不做分发
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+// 无任何第三方依赖：纯 framework API，构建最省事
+dependencies {
+}

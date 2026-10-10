@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  空壳 QQ 占位包的清单。
+
+  设计要点：
+  1) 包名必须是 com.tencent.mobileqq —— 第三方 App 判断“QQ 是否安装”基本都是查这个包名。
+  2) 需要注册 QQ 侧的几个组件名（JumpActivity 等），因为 QQ SDK 分享/登录是用
+     setClassName("com.tencent.mobileqq", "com.tencent.mobileqq.activity.JumpActivity")
+     这种“显式组件”方式发起的；没有这些组件名，显式分享会直接 ActivityNotFound。
+     这里全部用 <activity-alias> 指向同一个 RelayActivity，不写一行 QQ 代码。
+  3) 额外提供一个 ShareTarget 别名，带 ACTION_SEND 过滤器，这样它才会出现在
+     系统/App 的分享面板里，显示名字是“QQ”。不需要时可以在 App 里一键关掉
+     （见 ShellActivity 的复选框），或 adb 禁用该组件。
+  4) 本工程不含任何腾讯代码、资源或数据，只是一个同名包 + 转发壳。
+
+  注意：清单里不写 package / versionCode / versionName / uses-sdk，
+  这些由 Gradle 的 namespace+defaultConfig 提供；免 Gradle 脚本会自动注入临时副本。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 为了能在 Android 11+ 枚举到所有分享目标（TIIM 也显式声明在 queries 里） -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <queries>
+        <package android:name="com.tencent.tim" />
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="*/*" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND_MULTIPLE" />
+            <data android:mimeType="*/*" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault.Light">
+
+        <!-- 唯一可见的入口：状态页 / 开关 / 自测 -->
+        <activity
+            android:name=".ShellActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          所有别名都指向它。它是透明的、不进最近任务、不驻留，
+          收到分享后立刻转发给 TIM 然后 finish()。
+        -->
+        <activity
+            android:name=".RelayActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- 分享面板里那个叫“QQ”的条目（可运行时开关） -->
+        <activity-alias
+            android:name=".ShareTarget"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/qq_entry_label"
+            android:targetActivity=".RelayActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <!--
+              这两个“不带任何 data”的过滤器专门用来骗过探测式查询：
+                 queryIntentActivities(new Intent(ACTION_SEND).setPackage("com.tencent.mobileqq"))
+              这种查询不带 mimeType，只会匹配没有 data 声明的过滤器；
+              反过来，真实分享（一定带 mimeType）不会匹配它们，所以分享面板里不会多出重复条目。
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
+
+        <!--
+          ↓↓↓ QQ 侧组件名兼容层 ↓↓↓
+          QQ SDK（新版）分享走的是显式组件：
+            Intent#setClassName("com.tencent.mobileqq", "com.tencent.mobileqq.activity.JumpActivity")
+          数据塞在 mqqapi://share/to_fri?... 这个 URI 的 query 里（多为 base64）。
+          只注册 scheme 过滤的那一个别名会出现在“用浏览器打开 mqqapi 链接”这类场景，
+          正常分享面板里不会多出条目。
+        -->
+        <activity-alias
+            android:name=".activity.JumpActivity"
+            android:exported="true"
+            android:label="@string/qq_entry_label"
+            android:targetActivity=".RelayActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="mqqapi" />
+                <data android:scheme="mqqopensdkapi" />
+                <data android:scheme="mqqopensdkapiV2" />
+                <data android:scheme="mqqopensdkapiV3" />
+                <data android:scheme="mqq" />
+                <data android:scheme="mqqwpa" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 其余只是“占位存在”，没有过滤器：只有别的 App 显式点名它们时才会进来 -->
+        <activity-alias
+            android:name=".activity.LoginActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name=".activity.AssistActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name=".activity.QQBrowserActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name=".activity.qfileJumpActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name=".activity.SplashActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name=".activity.ForwardRecentActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name=".activity.ForwardRecentTranslucentActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+        <activity-alias
+            android:name="com.tencent.open.agent.AgentActivity"
+            android:exported="true"
+            android:targetActivity=".RelayActivity" />
+    </application>
+
+</manifest>

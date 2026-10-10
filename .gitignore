@@ -1,0 +1,21 @@
+# 构建产物
+build/
+dist/
+.gradle/
+
+# 签名密钥：首次构建会自动生成，不要提交
+*.keystore
+*.jks
+*.p12
+
+# 本地分析用的第三方 APK / 反汇编输出，不要进仓库
+*.apk
+*.apk.idsig
+*.dex
+
+# IDE 与系统
+.idea/
+*.iml
+local.properties
+Thumbs.db
+.DS_Store

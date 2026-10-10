@@ -1,0 +1,14 @@
+# 统一换行符，避免 Windows/Linux 协作时整文件变动
+* text=auto eol=lf
+
+# Windows 批处理保留 CRLF（个别 cmd 语法在纯 LF 下会出错）
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 二进制文件不要做任何转换
+*.apk binary
+*.idsig binary
+*.keystore binary
+*.jks binary
+*.png binary
+*.jpg binary
