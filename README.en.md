@@ -14,10 +14,11 @@ A tiny Android app that makes third-party apps believe **QQ is still installed**
 **Naming note:** the repository is named `QQ-share-shell`, deliberately not `qq-shell` — that name is
 already taken on GitHub and usually means *a QQ client or terminal* there, so `share` is included to say
 what this project actually does. GitHub treats repository names case-insensitively, so
-`qq-share-shell` resolves to the same place. Inside the app, three different names are used on purpose —
-the launcher name (`空壳QQ` / `string/app_name`), the entry shown in share sheets
-(`QQ` / `string/qq_entry_label`, which must stay `QQ`), and the package name
-(`com.tencent.mobileqq`, which is what host apps probe for). See the Chinese README for the full table.
+`qq-share-shell` resolves to the same place. Inside the app, three different names are used, each on
+purpose — the launcher name (`空壳QQ`), the entry shown in share sheets (`空壳QQ` as well: the entry's
+label does **not** need to say "QQ", only the package name matters, so it is not borrowed), and the
+package name (`com.tencent.mobileqq`, which is what host apps probe for). See the Chinese README for
+the full table.
 
 ---
 
@@ -160,8 +161,9 @@ The app shows a full **Disclaimer and Terms of Use** on its first screen (it liv
 * **What it does.** On your own device it reuses QQ's package name and a few identically named
   components, and relays shared content to the app you pick. It does not modify other apps, does not
   read other apps' data, and does not defeat any signature or integrity check.
-* **Privacy.** No network access, no data collected or uploaded. The only permission is package
-  visibility (`QUERY_ALL_PACKAGES`), used to enumerate share targets.
+* **Privacy.** No network access, no data collected or uploaded, and **no permissions at all** — package
+  visibility is declared with `<queries>` instead of requesting `QUERY_ALL_PACKAGES`. The built-in
+  `QQShell` logcat log records types and counts only, never the shared content.
 * **Restrictions.** For personal use and study, on devices you own or are authorised to manage only.
   Not for other people's devices, not for deception or impersonation, not for defeating security or
   licensing checks, and not for redistribution, resale, app stores or commercial use.

@@ -9,7 +9,7 @@
      这种“显式组件”方式发起的；没有这些组件名，显式分享会直接 ActivityNotFound。
      这里全部用 <activity-alias> 指向同一个 RelayActivity，不写一行 QQ 代码。
   3) 额外提供一个 ShareTarget 别名，带 ACTION_SEND 过滤器，这样它才会出现在
-     系统/App 的分享面板里，显示名字是“QQ”。不需要时可以在 App 里一键关掉
+     系统/App 的分享面板里（显示名字是“空壳QQ”，不冒充 QQ）。不需要时可以在 App 里一键关掉
      （见 ShellActivity 的复选框），或 adb 禁用该组件。
   4) 本工程不含任何腾讯代码、资源或数据，只是一个同名包 + 转发壳。
 
@@ -18,9 +18,10 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 为了能在 Android 11+ 枚举到所有分享目标（TIIM 也显式声明在 queries 里） -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-
+    <!--
+      本应用刻意不声明 QUERY_ALL_PACKAGES：需要看见的只有 TIM 与“能接收分享的应用”，
+      下面 <queries> 里的声明已经覆盖这两件事，权限面保持为零。
+    -->
     <queries>
         <package android:name="com.tencent.tim" />
         <intent>

@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.net.URLDecoder;
@@ -30,7 +31,21 @@ final class Relay {
     static final String TIM_PACKAGE = "com.tencent.tim";
     static final String SELF_SHARE_ALIAS = "com.tencent.mobileqq.ShareTarget";
 
+    /** logcat 统一 TAG，排查用：adb logcat -s QQShell */
+    private static final String TAG = "QQShell";
+
     private Relay() {
+    }
+
+    /**
+     * 排查用日志。只记录类型、数量与“是否为空”，不记录分享内容本身
+     * （正文、链接、图片地址都不打），避免把用户内容写进日志。
+     */
+    static void log(String message) {
+        try {
+            Log.i(TAG, message);
+        } catch (Throwable ignored) {
+        }
     }
 
     static void toast(Context context, String message) {
@@ -56,8 +71,10 @@ final class Relay {
      * @param announce 是否弹一句提示（显式分享跳进来时提示一下，避免用户以为没反应）
      */
     static void forward(Context context, Intent source, boolean announce) {
+        log("forward: action=" + source.getAction() + " type=" + source.getType());
         Intent send = buildSendIntent(source);
         if (send == null) {
+            log("forward: 无内容可转发");
             toast(context, "空壳QQ：这次分享没有可转发的内容（既没有文字也没有图片）");
             return;
         }
@@ -83,9 +100,11 @@ final class Relay {
             }
         }
 
+        log("forward: 候选分享目标 " + all.size() + " 个（TIM " + timTargets.size() + "，其它 " + others.size() + "）");
         List<ResolveInfo> targets = timTargets.isEmpty() ? others : timTargets;
 
         if (targets.isEmpty()) {
+            log("forward: 没有任何可用目标");
             toast(context, "空壳QQ：手机里没找到 TIM，请先安装 TIM");
             return;
         }
@@ -99,14 +118,18 @@ final class Relay {
             ResolveInfo ri = targets.get(0);
             Intent direct = new Intent(send);
             direct.setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name));
+            log("forward: 直接投给 " + ri.activityInfo.packageName + "/" + ri.activityInfo.name);
             if (startSafely(context, direct)) {
                 return;
             }
+            log("forward: 直接投递失败，改用选择器");
         }
 
+        log("forward: 弹出发送选择器（" + targets.size() + " 个目标）");
         Intent chooser = Intent.createChooser(send, "分享到");
         excludeSelf(chooser);
         if (!startSafely(context, chooser)) {
+            log("forward: 选择器也拉不起来");
             toast(context, "空壳QQ：转发失败，没有应用能接收这个内容");
         }
     }
@@ -222,6 +245,11 @@ final class Relay {
         String url = decodeParam(firstNonNull(params.get("url"), params.get("targetUrl"), params.get("target_url")));
         String image = decodeParam(firstNonNull(params.get("image_url"), params.get("imageUrl")));
         String appName = decodeParam(firstNonNull(params.get("app_name"), params.get("thirdAppDisplayName")));
+        log("mqqapi: src_type=" + params.get("src_type") + " file_type=" + fileType
+                + " 有标题=" + !TextUtils.isEmpty(title)
+                + " 有描述=" + !TextUtils.isEmpty(desc)
+                + " 有链接=" + !TextUtils.isEmpty(url)
+                + " 有图片=" + !TextUtils.isEmpty(image));
 
         StringBuilder sb = new StringBuilder();
         if (!TextUtils.isEmpty(title)) {
@@ -241,9 +269,11 @@ final class Relay {
             appendLine(sb, "—— 来自 " + appName);
         }
         if (sb.length() == 0 && TextUtils.isEmpty(fileType)) {
+            log("mqqapi: 解析后没有任何字段");
             return null;
         }
         if (sb.length() == 0) {
+            log("mqqapi: 解析有字段但没有可用文本");
             return null;
         }
 

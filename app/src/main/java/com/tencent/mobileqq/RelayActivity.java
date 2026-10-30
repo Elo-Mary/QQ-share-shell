@@ -43,13 +43,15 @@ public class RelayActivity extends Activity {
         }
 
         String action = intent.getAction();
+        Uri data = intent.getData();
+        String scheme = data == null ? null : data.getScheme();
+        Relay.log("dispatch: action=" + action + " scheme=" + scheme);
+
         if (Intent.ACTION_SEND.equals(action) || Intent.ACTION_SEND_MULTIPLE.equals(action)) {
             Relay.forward(this, intent, false);
             return;
         }
 
-        Uri data = intent.getData();
-        String scheme = data == null ? null : data.getScheme();
         if (scheme != null && scheme.startsWith("mqq")) {
             Intent send = Relay.buildFromMqqUri(data);
             if (send == null && (intent.hasExtra(Intent.EXTRA_TEXT) || intent.hasExtra(Intent.EXTRA_STREAM))) {

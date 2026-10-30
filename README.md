@@ -125,13 +125,14 @@ Manifest 里注册了什么、为什么：
 | `.activity.JumpActivity` | QQ SDK 分享/登录的显式入口，带 `mqqapi` / `mqqopensdkapi` 等 scheme |
 | `.activity.LoginActivity`、`.activity.AssistActivity`、`.activity.QQBrowserActivity`、`.activity.qfileJumpActivity`、`com.tencent.open.agent.AgentActivity` | 只是「存在」，供被显式点名时接住，不带过滤器 |
 
-**三个名字的分工**（都在 `app/src/main/res/values/strings.xml`，改成你想叫的名字只用改这一处）：
+**三个名字的分工**（都在 `app/src/main/res/values/strings.xml`，改名只改这一处）：
 
 | 名字 | 值 | 出现位置 | 为什么要这样 |
 |---|---|---|---|
 | 仓库名 | `QQ-share-shell` | GitHub | 描述"做什么"：`share` 表明它不是 QQ 客户端（光叫 `qq-shell` 在 GitHub 上已被占用且多指 QQ 客户端），`shell` 对应中文名"空壳" |
 | `string/app_name` | `空壳QQ` | 桌面图标下方、系统「应用信息」、最近任务 | 自己的名字，让人一眼看出不是真 QQ |
-| `string/qq_entry_label` | `QQ` | 分享面板 / 分享选择器里的那一项 | 第三方 App 的入口靠**包名**判断，但用户在面板里看到的、以及「QQ / TIM」选择器里的名字来自这里，必须保持 `QQ` |
+| `string/qq_entry_label` | `空壳QQ` | 分享面板 / 分享选择器里的那一项 | 入口能否出现只取决于**包名**，与名字无关；这里刻意**不写 `QQ`**——不冒充，也免得用户以为这一项会打开真 QQ |
+| `string/project_version` | `1.0.2` | App 状态页 | 项目自己的版本号；APK 内部的 `versionName` 是故意伪装成 QQ 版本的另一个东西 |
 | `string/shell_title` 等 | 界面文案 | App 内 | 说明与免责声明，集中放 strings.xml 便于以后做多语言 |
 
 转发逻辑（`Relay.java`）要点：
@@ -240,13 +241,18 @@ adb shell "am start -a android.intent.action.VIEW -d 'mqqapi://share/to_fri?src_
 
 回报时最有用的信息：**App 名称+版本**、属于上表哪一种、以及（如果方便）壳状态页的截图。
 
-真机实测第三方 App 时，用 logcat 看它到底走了哪条路：
+真机实测第三方 App 时，用 logcat 看空壳这边到底走了哪条路：
 
 ```bash
 adb logcat -c
-# 然后在那个 App 里点一次「分享至 QQ」
-adb logcat | findstr /i "tencent.mobileqq qqshell"
+adb logcat -s QQShell
+# 然后在那个 App 里点一次「分享至 QQ」，回来看看这几行：
+#   dispatch: action=… scheme=…
+#   forward: 候选分享目标 N 个（TIM x，其它 y）
+#   forward: 直接投给 com.tencent.tim/…（或 “弹出发送选择器”）
 ```
+
+日志有意**不记录分享内容**（正文、链接、图片地址都不打），只记录类型、数量与是否为空 —— 贴给别人看也不会泄露你分享了什么。
 
 ---
 
@@ -262,7 +268,8 @@ adb logcat | findstr /i "tencent.mobileqq qqshell"
 | 空壳装好后 QQ 登录/QQ 支付不能用了 | 预期行为：空壳不实现这些 |
 | 脚本报找不到 SDK / build-tools | 用 `-SdkRoot` 指定；或在 SDK Manager 里装 Android SDK Platform 与 Build-Tools |
 | `d8` 报内部错误：`NullPointerException: Cannot invoke "String.length()" because "<parameter1>" is null` | 新版 javac（21+）给匿名内部类/非静态内部类生成的合成字段 `this$0`，会让 build-tools 34 里的 R8 8.2.2 内部崩溃。本工程已经把监听器都写成「静态嵌套类 + 显式持有引用」来规避（见 `ShellActivity` 末尾注释）。你自己加代码时不要用匿名内部类捕获外部实例；或换更新的 build-tools |
-| 桌面图标叫「空壳QQ」但分享面板里叫「QQ」 | 故意这样设计：桌面名写在 `string/app_name`，分享面板那一项用 `string/qq_entry_label`（= QQ）。见下方「三个名字的分工」 |
+| 桌面图标和分享面板里都叫「空壳QQ」 | 刻意如此：入口能否出现只取决于包名，名字不写 `QQ`，不冒充。见上文「三个名字的分工」 |
+| 想知道某次分享为什么没成功 | 另开窗口跑 `adb logcat -s QQShell`，日志会打印收到的 action/scheme、候选目标数量、最终投给了谁；**日志不记录分享内容** |
 
 ---
 
@@ -286,7 +293,7 @@ App 首屏的「免责声明与使用限制」全文如下（同样内置于 `re
   「QQ」「TIM」等名称与商标归各自权利人所有，此处仅用于说明兼容对象与用途。工程内不含任何腾讯代码、资源或数据。
 * **本应用做什么**：只在你自己的设备上使用与 QQ 相同的包名与若干同名组件名，并把收到的分享内容原样转交给你指定的应用；
   它不修改其它任何应用、不读取其它应用的数据，也不破解或绕过任何签名校验与保护措施。
-* **隐私**：不联网，不收集、不上传任何数据；除用于枚举分享目标的包可见性权限（`QUERY_ALL_PACKAGES`）外，不申请任何权限。
+* **隐私**：不联网，不收集、不上传任何数据；**不申请任何权限**（连包可见性都用 `<queries>` 声明解决，没有 `QUERY_ALL_PACKAGES`）。
 * **使用限制**：仅限在你自己拥有或有权管理的设备上、为个人使用与学习研究而安装使用。不得用于他人的或未经同意的设备；
   不得用于欺骗、冒充或误导任何人；不得用于绕过任何安全机制、风控或授权校验；不得以任何形式分发、转售、上架应用商店或用于商业用途。
 * **风险与责任**：按「现状」提供，不附带任何明示或默示担保。使用它可能与你设备上某些应用的服务条款不一致，也可能导致
@@ -300,6 +307,32 @@ App 首屏的「免责声明与使用限制」全文如下（同样内置于 `re
 > **一句实话**：免责声明**不能**免除侵权责任、也不能替代授权，它只能明确项目定位、使用边界与责任归属。
 > 真正降低风险的做法是：只在自有设备上使用、不分发、不上架、不用它去影响别人的设备。
 > 也因此，本工程刻意不含腾讯代码、不用腾讯图标素材，并在 App 内与仓库里都写明非官方。
+
+### 本项目如何避免「碰瓷」
+
+包名兼容是**功能必需**（宿主应用就是按包名判断的），除此之外一律不沾：
+
+| 可能被看成"碰瓷"的做法 | 本项目的做法 |
+|---|---|
+| 用 QQ 的名字出现在分享面板 | ❌ 不做：分享面板里显示的是「空壳QQ」（`string/qq_entry_label`），功能并不依赖这个名字 |
+| 应用名 / 桌面名冒充 QQ | ❌ 不做：应用名是「空壳QQ」 |
+| 使用 QQ 的图标素材 | ❌ 不做：图标是自己画的矢量图 |
+| 把版本的品牌露出做得像官方 | ❌ 不做：APK 内部 `versionName` 虽为 `8.9.90`（SDK 版本判断需要），但状态页明确标注它不是项目版本、且这是伪装值 |
+| 宣称兼容 QQ 官方能力 | ❌ 不做：README 与 App 内都写明不提供 QQ 登录/支付，且会在校验签名的 App 上失效 |
+
+---
+
+## 兼容性记录（欢迎共建）
+
+这是最有用的一份清单：**哪些 App 能用、为什么不能用**。请按同样格式提 Issue 补充。
+
+| App | 版本 | 判定方式 | 结果 |
+|---|---|---|---|
+| 哔哩哔哩 (`tv.danmaku.bili`) | 8.22.0 | 只 `getPackageInfo("com.tencent.mobileqq", 0)`，不校验签名 | ✅ 可用（详见文末附录的反汇编证据） |
+| 微信 (`com.tencent.mm`) 分享 | — | 微信 SDK 会校验微信自己的签名 | ❌ 不适用本方案（同思路做微信空壳也不行） |
+
+自测某个 App 前，先跑一遍：`powershell -ExecutionPolicy Bypass -File .\inspect-target-app.ps1 -ApkPath '某个.apk'`，
+它会告诉你这个 App 有没有签名校验痕迹。
 
 ---
 
@@ -367,6 +400,7 @@ mqqapi://opensdk/...
 | 项目 | 状态 |
 |---|---|
 | 仓库名 | ✅ <https://github.com/Elo-Mary/QQ-share-shell> |
+| 发版流程 | 改 `app/src/main/res/values/strings.xml` 里的 `string/project_version`（与 tag 一致）→ 构建 → 打 tag → 在网页上建 Release 并上传 `dist\qq-shell.apk` |
 | 仓库 Description | 可直接粘贴：`Unofficial shell that makes apps show "Share to QQ" again, then relays the shared content to TIM. 空壳QQ` |
 | 仓库 Topics | 建议：`android`、`tim`、`share-sheet`、`compatibility-shim`、`java`、`apk` |
 | LICENSE | ✅ 已加 [LICENSE](LICENSE)（MIT），署名 Elo-Mary |
@@ -389,16 +423,18 @@ mqqapi://opensdk/...
 
 * 工具链：JDK 23.0.2 + Android SDK（build-tools 34.0.0 + platform android-36）。
   用这套组合时注意上文的 R8 陷阱：build-tools 34 的 R8 8.2.2 配 JDK 21+ 会崩，本工程已用静态嵌套类规避。
-* 产物：`dist\qq-shell.apk`（28.5 KB），签名密钥 `qqshell.keystore`（首次构建自动生成，SHA-1 `AC:5D:F4:51:09:34:2B:0F:1F:81:0D:8F:36:8D:08:32:99:93:21:46`，
+* 产物：`dist\qq-shell.apk`（v1.0.2 为 32.5 KB），签名密钥 `qqshell.keystore`（首次构建自动生成，SHA-1 `AC:5D:F4:51:09:34:2B:0F:1F:81:0D:8F:36:8D:08:32:99:93:21:46`，
   与 App 状态页里显示的一致）。该密钥已被 `.gitignore` 排除，请自行备份。
+* v1.0.2 的改动：**权限归零**（移除 `QUERY_ALL_PACKAGES`）、分享面板里显示「空壳QQ」不再冒充 QQ、
+  加 `QQShell` logcat 日志（不含分享内容）、状态页显示项目版本。
 
 已经验证过的项：
 
 | 验证项 | 结果 |
 |---|---|
-| 包名 / 版本 / 名称 | `com.tencent.mobileqq`，versionName `8.9.90`；应用名与桌面名 `空壳QQ`，分享面板那一项 `QQ` |
+| 包名 / 版本 / 名称 | `com.tencent.mobileqq`，versionName `8.9.90`（伪装值，为过 QQ SDK 的版本判断）；项目版本见状态页；应用名、桌面名与分享面板那一项都是 `空壳QQ` |
 | `uses-sdk` | minSdk 21，targetSdk 34 |
-| 权限 | 只有 `QUERY_ALL_PACKAGES`（用于枚举分享目标），不联网、无其它权限 |
+| 权限 | **零权限**（不声明任何 `uses-permission`；包可见性靠 `<queries>` 声明解决） |
 | `resources.arsc` | 未压缩（Android 11+ 的硬要求） |
 | 对齐 | `zipalign -c 4` 通过 |
 | 签名 | v1 + v2 + v3 三套方案均通过 `apksigner verify` |

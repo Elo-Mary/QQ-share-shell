@@ -65,7 +65,7 @@ if (-not $adb) {
 Write-Host "使用 adb：$adb" -ForegroundColor DarkGray
 
 # ---------------------------------------------------------------- 1 设备
-Write-Section "1/5 检查设备连接"
+Write-Section "1/6 检查设备连接"
 $devices = & $adb devices
 $devices | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
 $online = @($devices | Where-Object { $_ -match '\sdevice$' })
@@ -76,7 +76,7 @@ if ($online.Count -eq 0) {
 Write-Pass "已连接 $($online.Count) 台设备"
 
 # ---------------------------------------------------------------- 2 包
-Write-Section "2/5 检查包是否安装"
+Write-Section "2/6 检查包是否安装"
 $packages = & $adb shell pm list packages
 $hasShell = @($packages | Where-Object { $_.Trim() -eq "package:$PackageName" }).Count -gt 0
 $hasTim = @($packages | Where-Object { $_.Trim() -eq "package:$TimPackage" }).Count -gt 0
@@ -93,7 +93,7 @@ if ($hasTim) {
 if (-not $hasShell) { exit 1 }
 
 # ---------------------------------------------------------------- 3 组件
-Write-Section "3/5 检查关键组件"
+Write-Section "3/6 检查关键组件"
 $dump = & $adb shell dumpsys package $PackageName
 $wanted = @(
     @{ Name = 'activity.JumpActivity'; Hint = 'QQ SDK 显式分享入口' },
@@ -113,7 +113,7 @@ if ($aliasState.Count -gt 0 -and @($dump | Select-String -Pattern 'disabledCompo
 }
 
 # ---------------------------------------------------------------- 4 分享目标解析
-Write-Section "4/5 系统能否把分享解析到这个包（Android 11+）"
+Write-Section "4/6 系统能否把分享解析到这个包（Android 11+）"
 $query = & $adb shell "cmd package query-activities -a android.intent.action.SEND -t text/plain --brief" 2>&1
 if ($query -match 'Unknown command' -or $query -match 'Error') {
     Write-Fail "这台设备不支持 cmd package query-activities（需要 Android 11+），跳过。"
@@ -127,21 +127,48 @@ if ($query -match 'Unknown command' -or $query -match 'Error') {
     }
 }
 
-# ---------------------------------------------------------------- 5 端到端
-Write-Section "5/5 端到端测试 QQ SDK 显式分享路径"
+# ---------------------------------------------------------------- 5 端到端（多条投递路径）
+Write-Section "5/6 端到端测试投递路径"
 if ($SkipShareTest) {
     Write-Host "    已按 -SkipShareTest 跳过" -ForegroundColor DarkGray
 } else {
-    $am = "am start -a android.intent.action.VIEW -d 'mqqapi://share/to_fri?src_type=app&file_type=news&title=5rWL6K+V&url=aHR0cHM6Ly9leGFtcGxlLmNvbQ==' -n $PackageName/$PackageName.activity.JumpActivity"
-    $result = & $adb shell $am 2>&1
-    $result | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
-    if ($result -match 'Error|Exception|does not exist') {
-        Write-Fail "拉起失败，把上面的报错发出来"
-    } else {
-        Write-Pass "已拉起空壳的 JumpActivity（手机上应出现“已把内容转给 TIM”并打开 TIM）"
+    $cases = @(
+        @{ Name = 'QQ SDK 显式分享（JumpActivity + mqqapi）'
+           Cmd  = "am start -a android.intent.action.VIEW -d 'mqqapi://share/to_fri?src_type=app&file_type=news&title=5rWL6K+V&url=aHR0cHM6Ly9leGFtcGxlLmNvbQ==' -n $PackageName/$PackageName.activity.JumpActivity" },
+        @{ Name = '包限定 scheme（mqqopensdkapi，模拟只凭包名+scheme 的投递）'
+           Cmd  = "am start -a android.intent.action.VIEW -d 'mqqopensdkapi://bizAgent/test?src_type=app' -p $PackageName" },
+        @{ Name = '隐式 ACTION_SEND（应弹选择器，列表里是「空壳QQ」和 TIM）'
+           Cmd  = "am start -a android.intent.action.SEND -t 'text/plain' --es android.intent.extra.TEXT 'shell self test'" }
+    )
+    foreach ($case in $cases) {
+        Write-Host "    · $($case.Name)" -ForegroundColor DarkGray
+        $result = & $adb shell $case.Cmd 2>&1
+        $result | ForEach-Object { Write-Host "        $_" -ForegroundColor DarkGray }
+        if ($result -match 'Error|Exception|does not exist|Unable') {
+            Write-Fail "失败：$($case.Name)"
+        } else {
+            Write-Pass "已拉起：$($case.Name)"
+        }
+        Start-Sleep -Milliseconds 900
     }
+}
+
+# ---------------------------------------------------------------- 6 权限面
+Write-Section "6/6 检查权限面（应为零权限）"
+$permBlock = @(& $adb shell dumpsys package $PackageName 2>&1 |
+    Select-String -Pattern 'requested permissions:' -Context 0,8 |
+    ForEach-Object { $_.Context.PostContext })
+$permText = ($permBlock -join "`n")
+if ($permText -match 'QUERY_ALL_PACKAGES') {
+    Write-Fail "仍声明了 QUERY_ALL_PACKAGES —— 应已移除"
+} elseif ($permText.Trim().Length -eq 0) {
+    Write-Pass "没有任何 requested permissions（零权限）"
+} else {
+    Write-Pass "权限列表里没有 QUERY_ALL_PACKAGES"
+    $permBlock | Where-Object { $_.Trim() } | Select-Object -First 5 | ForEach-Object { Write-Host "        $($_.Trim())" -ForegroundColor DarkGray }
 }
 
 Write-Host ""
 Write-Host "自检结束。接下来：在真正的第三方 App 里点一次「分享至 QQ」。" -ForegroundColor Cyan
 Write-Host "若那个 App 仍然不显示入口，说明它校验了 QQ 的签名 —— 请改用 README 第四节的「禁用真 QQ」。" -ForegroundColor Cyan
+Write-Host "排查分享失败时另开窗口跑：adb logcat -s QQShell（日志不含分享内容，只记录类型与数量）" -ForegroundColor Cyan

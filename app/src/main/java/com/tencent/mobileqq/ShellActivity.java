@@ -132,15 +132,18 @@ public class ShellActivity extends Activity {
         box.addView(spacer);
     }
 
-    /** 运行状态：包名、版本、Android 版本、TIM、分享面板条目、本应用签名指纹 */
+    /** 运行状态：项目版本、包名、APK 版本、Android 版本、TIM、分享面板条目、签名指纹 */
     private void refresh() {
         StringBuilder sb = new StringBuilder();
+        sb.append("项目版本：").append(getString(R.string.project_version)).append('\n');
         sb.append("包名：").append(getPackageName()).append('\n');
         try {
             PackageInfo self = getPackageManager().getPackageInfo(getPackageName(), 0);
-            sb.append("版本：").append(self.versionName).append("（").append(self.versionCode).append("）\n");
+            sb.append("APK versionName：").append(self.versionName)
+                    .append("（").append(self.versionCode).append("）")
+                    .append("——为了让 QQ SDK 的版本判断通过而刻意设置的 QQ 版本号，不是本项目版本\n");
         } catch (Throwable t) {
-            sb.append("版本：读取失败\n");
+            sb.append("APK versionName：读取失败\n");
         }
         sb.append("Android：").append(Build.VERSION.RELEASE)
                 .append("（API ").append(Build.VERSION.SDK_INT).append("）\n");
@@ -152,7 +155,7 @@ public class ShellActivity extends Activity {
             sb.append("TIM：已安装，版本 ").append(timVersion).append('\n');
         }
 
-        sb.append("分享面板条目：").append(isAliasEnabled() ? "已开启（显示为 QQ）" : "已关闭").append('\n');
+        sb.append("分享面板条目：").append(isAliasEnabled() ? "已开启（显示为 空壳QQ）" : "已关闭").append('\n');
         sb.append("本应用签名 SHA-1：").append(ownSignatureSha1()).append('\n');
         sb.append("（少数应用会用腾讯官方证书指纹比对 QQ 是否为正版；与上面这串不一致时，")
                 .append("它们不会显示分享入口。）");

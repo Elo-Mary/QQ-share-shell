@@ -4,11 +4,14 @@
     <string name="app_name">空壳QQ</string>
 
     <!--
-      分享面板 / 分享选择器里显示的那一项名字，必须保持为 QQ。
-      第三方应用的「分享至 QQ」入口是靠包名 com.tencent.mobileqq 判断的；
-      这个名字只负责让分享面板里那一项显示成 QQ（而不是空壳QQ）。
+      分享面板 / 分享选择器里显示的那一项名字。
+      刻意用「空壳QQ」而不是「QQ」：入口能否出现只取决于包名，与这个名字无关，
+      所以没必要冒充 QQ 的名字——少一点“碰瓷”，也免得用户误以为这一项会打开真 QQ。
     -->
-    <string name="qq_entry_label">QQ</string>
+    <string name="qq_entry_label">空壳QQ</string>
+
+    <!-- 项目版本号（发版时改这一行；APK 内部的 versionName 是另一回事） -->
+    <string name="project_version">1.0.2</string>
 
     <string name="shell_title">空壳QQ</string>
 
